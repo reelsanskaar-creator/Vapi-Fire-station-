@@ -1,0 +1,1151 @@
+<!DOCTYPE html><html lang="en" dir="ltr"><head><meta charset="UTF-8"><style></style></head><body><!DOCTYPE html>
+<html lang="gu" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>વાપી મહાનગરપાલિકા ફાયર સ્ટેશન - કમાન્ડ સેન્ટર ડેશબોર્ડ</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        fire: { 50: '#fff1f2', 100: '#ffe4e6', 500: '#f43f5e', 600: '#e11d48', 700: '#be123c', 800: '#9f1239', 900: '#881337' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a0505 0%, #2e0808 35%, #0f172a 100%);
+            background-attachment: fixed;
+        }
+        .glass-panel { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(244, 63, 94, 0.2); }
+        .light .glass-panel { background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(16px); border: 1px solid rgba(225, 29, 72, 0.2); }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(244, 63, 94, 0.6); }
+            50% { box-shadow: 0 0 35px rgba(244, 63, 94, 0.9); }
+        }
+        .emergency-glow { animation: pulse-glow 2s infinite; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        ::-webkit-scrollbar-thumb { background: #f43f5e; border-radius: 3px; }
+    </style>
+</head>
+<body class="h-full text-slate-100 font-sans antialiased overflow-x-hidden flex flex-col">
+
+    <!-- હેડર -->
+    <header class="bg-gradient-to-r from-fire-950 via-fire-900 to-slate-950 text-white shadow-2xl z-20 px-4 py-3 flex items-center justify-between sticky top-0 border-b border-fire-800/50">
+        <div class="flex items-center space-x-3">
+            <div class="bg-white p-1 rounded-xl border border-white/25 emergency-glow flex items-center justify-center overflow-hidden" style="width: 52px; height: 52px; min-width: 52px;">
+                <img src="https://lh3.googleusercontent.com/d/174PWn8OLHJrtVKz_it5cL0REl57-zMqj" alt="Vapi Fire Station Logo" class="w-full h-full object-cover rounded-lg" onerror="this.onerror=null; this.src='https://placehold.co/52x52/e11d48/ffffff?text=FIRE';">
+            </div>
+            <div>
+                <h1 class="text-sm sm:text-base font-bold tracking-wide flex flex-wrap items-center gap-1.5">
+                    <span>વાપી મહાનગરપાલિકા ફાયર સ્ટેશન</span> 
+                    <span class="text-[10px] bg-amber-500 text-slate-950 px-2 py-0.5 rounded-full font-extrabold uppercase">કમાન્ડ સેન્ટર</span>
+                </h1>
+                <p class="text-[11px] text-rose-200 flex items-center gap-2">
+                    <span>ગુગલ શીટ લિંક: <a href="https://docs.google.com/spreadsheets/d/1nbfq2UWMWh_5SaQejtdFgopioO2nxAbRICIGSyCSDU8/edit?usp=drivesdk" target="_blank" class="underline text-amber-300 font-semibold">ઓપન શીટ</a></span>
+                    <span id="net-status" class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-600 text-white"><i class="fa-solid fa-wifi"></i> ઓનલાઇન</span>
+                </p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-2 sm:space-x-3">
+            <div class="hidden lg:flex items-center bg-black/30 rounded-lg px-3 py-1.5 border border-white/10 text-xs">
+                <i class="fa-regular fa-clock text-amber-400 mr-2"></i>
+                <span id="live-clock">સમય લોડ થઈ રહ્યો છે...</span>
+            </div>
+            <button type="button" onclick="openConfigModal()" class="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold px-3 py-2 rounded-xl text-xs transition shadow cursor-pointer">
+                <i class="fa-solid fa-link"></i> <span class="hidden sm:inline">ગુગલ શીટ સેટઅપ</span>
+            </button>
+            <button type="button" onclick="openAddModal()" class="flex items-center gap-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold px-3.5 py-2 rounded-xl text-xs transition shadow-lg cursor-pointer">
+                <i class="fa-solid fa-plus-circle text-sm"></i> <span class="hidden sm:inline">નવો કોલ ઉમેરો</span>
+            </button>
+            <button type="button" onclick="toggleTheme()" class="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition text-white border border-white/10 cursor-pointer" title="થીમ બદલો">
+                <i id="theme-icon" class="fa-solid fa-sun text-amber-400"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- મુખ્ય વર્કસ્પેસ -->
+    <main class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 max-w-7xl mx-auto w-full">
+
+        <!-- સ્ટેટ કાર્ડ્સ -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="glass-panel p-4 rounded-2xl shadow-xl flex items-center justify-between">
+                <div>
+                    <p class="text-[11px] font-semibold text-rose-300 uppercase">કુલ ઇમરજન્સી કોલ</p>
+                    <h3 id="stat-total" class="text-2xl sm:text-3xl font-extrabold text-white mt-0.5">0</h3>
+                    <p class="text-[10px] text-rose-400 font-medium mt-1"><i class="fa-solid fa-arrow-trend-up"></i> રજિસ્ટર ડેટા</p>
+                </div>
+                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-fire-900/60 text-fire-400 rounded-xl flex items-center justify-center text-lg border border-fire-700/50">
+                    <i class="fa-solid fa-phone-volume"></i>
+                </div>
+            </div>
+
+            <div class="glass-panel p-4 rounded-2xl shadow-xl flex items-center justify-between">
+                <div>
+                    <p class="text-[11px] font-semibold text-emerald-300 uppercase">કુલ બચાવેલા (માનવ/પ્રાણી/પક્ષી)</p>
+                    <h3 id="stat-rescued" class="text-2xl sm:text-3xl font-extrabold text-emerald-400 mt-0.5">0</h3>
+                    <p class="text-[10px] text-emerald-400 font-medium mt-1"><i class="fa-solid fa-user-shield"></i> સફળ રેસ્ક્યુ</p>
+                </div>
+                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-950/60 text-emerald-400 rounded-xl flex items-center justify-center text-lg border border-emerald-800/50">
+                    <i class="fa-solid fa-hands-holding-child"></i>
+                </div>
+            </div>
+
+            <div class="glass-panel p-4 rounded-2xl shadow-xl flex items-center justify-between">
+                <div>
+                    <p class="text-[11px] font-semibold text-rose-300 uppercase">કુલ જાનહાની</p>
+                    <h3 id="stat-deaths" class="text-2xl sm:text-3xl font-extrabold text-rose-400 mt-0.5">0</h3>
+                    <p class="text-[10px] text-rose-400 font-medium mt-1"><i class="fa-solid fa-triangle-exclamation"></i> નોંધાયેલ મૃત્યુ</p>
+                </div>
+                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-rose-950/60 text-rose-400 rounded-xl flex items-center justify-center text-lg border border-rose-800/50">
+                    <i class="fa-solid fa-bed-pulse"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- વિઝ્યુઅલાઈઝેશન ચાર્ટ્સ -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="glass-panel p-5 rounded-2xl shadow-xl">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="font-bold text-sm text-white flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-fire-500"></i> કોલ પ્રકાર વિશ્લેષણ (Call Types)
+                    </h4>
+                    <span class="text-[11px] text-slate-400">લાઇવ ડેટા</span>
+                </div>
+                <div class="h-64 relative flex items-center justify-center">
+                    <canvas id="callTypeChart"></canvas>
+                </div>
+            </div>
+
+            <div class="glass-panel p-5 rounded-2xl shadow-xl">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="font-bold text-sm text-white flex items-center gap-2">
+                        <i class="fa-solid fa-chart-column text-blue-400"></i> વાહનોનો ઉપયોગ (Vehicle Usage)
+                    </h4>
+                    <span class="text-[11px] text-slate-400">ફ્લીટ ડિપ્લોયમેન્ટ</span>
+                </div>
+                <div class="h-64 relative flex items-center justify-center">
+                    <canvas id="vehicleChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- કોલ રજિસ્ટર ટેબલ -->
+        <div class="glass-panel rounded-2xl shadow-xl overflow-hidden">
+            <div class="p-4 sm:p-5 border-b border-slate-700/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h3 class="font-bold text-base text-white">વાપી ફાયર સ્ટેશન - કોલ વિગતો રજિસ્ટર</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">કોલનારનું નામ, મોબાઈલ નંબર અને મીડિયા ફાઈલો સાથે ગુગલ શીટ સિન્ક.</p>
+                </div>
+                <div class="flex items-center gap-3 w-full sm:w-auto">
+                    <div class="relative flex-1 sm:w-64">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs"></i>
+                        <input type="text" id="search-input" oninput="renderTable()" placeholder="સર્ચ કરો (કોલનાર, વાહન, સ્ટાફ)..." class="w-full pl-9 pr-4 py-2 bg-slate-900/80 rounded-xl text-xs border border-slate-700 focus:border-fire-500 focus:outline-none text-slate-200">
+                    </div>
+                    <button type="button" onclick="syncToGoogleSheet()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-3.5 py-2 rounded-xl text-xs transition flex items-center gap-1.5 whitespace-nowrap shadow cursor-pointer">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> ગુગલ શીટમાં મોકલો
+                    </button>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                    <thead class="bg-slate-950/80 text-slate-400 uppercase font-semibold border-b border-slate-700/50">
+                        <tr>
+                            <th class="p-3 sm:p-4">ક્રમ</th>
+                            <th class="p-3 sm:p-4">મીડિયા (ફોટા/વિડિયો)</th>
+                            <th class="p-3 sm:p-4">તારીખ અને સમય (Out / In)</th>
+                            <th class="p-3 sm:p-4">કોલ પ્રકાર</th>
+                            <th class="p-3 sm:p-4">કોલ કરનારની વિગતો</th>
+                            <th class="p-3 sm:p-4">બિલ્ડીંગ / વિગતો</th>
+                            <th class="p-3 sm:p-4">વાહન અને સ્ટાફ ટીમ</th>
+                            <th class="p-3 sm:p-4">રેસ્ક્યુ (મા/પ્ર/પક્ષી)</th>
+                            <th class="p-3 sm:p-4">મૃત્યુ (મા/પ્ર/પક્ષી)</th>
+                            <th class="p-3 sm:p-4 text-right">ક્રિયા</th>
+                        </tr>
+                    </thead>
+                    <tbody id="call-table-body" class="divide-y divide-slate-800/50">
+                        <!-- JS દ્વારા ડેટા ઉમેરાશે -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ગુગલ શીટ સેટઅપ મોડલ -->
+    <div id="config-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-panel rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col">
+            <div class="px-5 py-4 border-b border-slate-700/50 flex items-center justify-between bg-slate-950/60">
+                <h3 class="font-bold text-base text-white">ગુગલ શીટ (Google Apps Script) કન્ફિગરેશન</h3>
+                <button type="button" onclick="closeConfigModal()" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition cursor-pointer">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="p-5 space-y-4 text-xs sm:text-sm">
+                <p class="text-slate-300">તમારું Google Apps Script Web App URL નીચે કન્ફર્મ કરો:</p>
+                <div>
+                    <label class="block font-semibold text-slate-300 mb-1">Google Apps Script Web App URL</label>
+                    <input type="text" id="gsheet-url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3.5 py-2 bg-slate-900/90 border border-slate-700 rounded-xl focus:outline-none focus:border-fire-500 text-white">
+                </div>
+            </div>
+            <div class="px-5 py-3 border-t border-slate-700/50 bg-slate-950/60 flex justify-end space-x-3">
+                <button type="button" onclick="closeConfigModal()" class="px-4 py-2 rounded-xl border border-slate-700 text-slate-300 text-xs font-semibold cursor-pointer">બંધ કરો</button>
+                <button type="button" onclick="saveConfig()" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow cursor-pointer">સેવ કરો</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- મોડલ ફોર્મ (એડ / એડિટ) -->
+    <div id="modal-backdrop" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="glass-panel rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[95vh] my-auto border border-fire-500/30">
+            <div class="px-5 py-4 border-b border-slate-700/50 flex items-center justify-between bg-slate-950/80">
+                <h3 id="modal-title" class="font-bold text-base sm:text-lg text-white">નવો ફાયર કોલ રેકોર્ડ ઉમેરો</h3>
+                <button type="button" onclick="closeModal()" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition cursor-pointer">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <div class="p-5 overflow-y-auto flex-1 space-y-4 text-xs sm:text-sm">
+                <input type="hidden" id="edit-id">
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-semibold text-slate-300 mb-1">નગરપાલિકાનું નામ</label>
+                        <input type="text" id="f-nagarpalika" value="VAPI" class="w-full px-3.5 py-2 bg-slate-900/90 border border-slate-700 rounded-xl focus:outline-none focus:border-fire-500 text-white">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-300 mb-1">તારીખ</label>
+                        <input type="date" id="f-date" class="w-full px-3.5 py-2 bg-slate-900/90 border border-slate-700 rounded-xl focus:outline-none focus:border-fire-500 text-white">
+                    </div>
+                </div>
+
+                <!-- કોલ કરનારનું નામ અને મોબાઈલ નંબર -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-fire-950/50 p-3.5 rounded-2xl border border-fire-800/60 shadow-inner">
+                    <div>
+                        <label class="block font-bold text-amber-300 mb-1">કોલ કરનારનું નામ (Caller Name) <span class="text-rose-400">*</span></label>
+                        <input type="text" id="f-callerName" placeholder="ફોન કરનાર વ્યક્તિનું નામ..." required class="w-full px-3.5 py-2 bg-slate-900 border border-fire-700 rounded-xl focus:outline-none focus:border-fire-500 text-white">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-amber-300 mb-1">કોલ કરનારનો મોબાઈલ નંબર (Caller Mobile) <span class="text-rose-400">*</span></label>
+                        <input type="tel" id="f-callerMobile" placeholder="૧૦ અંકનો મોબાઈલ નંબર..." maxlength="10" required class="w-full px-3.5 py-2 bg-slate-900 border border-fire-700 rounded-xl focus:outline-none focus:border-fire-500 text-white">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block font-semibold text-slate-300 mb-1">કોલ આઉટ ટાઈમ (Out Time)</label>
+                        <input type="time" id="f-inTime" required class="w-full px-3.5 py-2 bg-slate-900/90 border border-slate-700 rounded-xl focus:outline-none focus:border-fire-500 text-white">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-300 mb-1">કોલ ઈન ટાઈમ (In Time)</label>
+                        <input type="time" id="f-outTime" required class="w-full px-3.5 py-2 bg-slate-900/90 border border-slate-700 rounded-xl focus:outline-none focus:border-fire-500 text-white">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-300 mb-1">કોલનો મુખ્ય પ્રકાર (Call Type)</label>
+                        <select id="f-callType" onchange="handleCallTypeChange()" class="w-full px-3.5 py-2 bg-slate-900/90 border border-slate-700 rounded-xl focus:outline-none focus:border-fire-500 text-white">
+                            <option value="Fire Call">Fire Call (આગનો કોલ)</option>
+                            <option value="Rescue Call">Rescue Call (બચાવ કામગીરી)</option>
+                            <option value="Mock drill">Mock drill (મોકડ્રીલ)</option>
+                            <option value="Bandobast">Bandobast (બંદોબસ્ત)</option>
+                            <option value="અન્ય (Other)">અન્ય (Other)</option>
+                        </select>
+                        <input type="text" id="f-callType-other" placeholder="મુખ્ય પ્રકાર મેન્યુઅલ લખો..." class="w-full mt-2 px-3.5 py-2 bg-slate-900/90 border border-slate-700 rounded-xl hidden text-white">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block font-semibold text-slate-300 mb-1">સબ કોલ પ્રકાર (Sub Call Type)</label>
+                        <select id="f-subType" onchange="handleSubCallTypeChange()" class="w-full px-3.5 py-2 bg-slate-900/90 border border-slate-700 rounded-xl focus:outline-none focus:border-fire-500 text-white">
+                            <!-- ડાયનેમિકલી ભરાશે -->
+                        </select>
+                        <input type="text" id="f-subType-other" placeholder="સબ પ્રકાર મેન્યુઅલ લખો..." class="w-full mt-2 px-3.5 py-2 bg-slate-900/90 border border-slate-700 rounded-xl hidden text-white">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-300 mb-1">એસ.ઓ.પી. બિલ્ડીંગ પ્રકાર (SOP Building)</label>
+                        <select id="f-sopBuilding" onchange="handleSopBuildingChange()" class="w-full px-3.5 py-2 bg-slate-900/90 border border-slate-700 rounded-xl focus:outline-none focus:border-fire-500 text-white">
+                            <option value="Factory / Industrial (ફેક્ટરી / ઔદ્યોગિક)">Factory / Industrial (ફેક્ટરી / ઔદ્યોગિક)</option>
+                            <option value="Commercial Complex (કોમર્શિયલ કોમ્પ્લેક્સ)">Commercial Complex (કોમર્શિયલ કોમ્પ્લેક્સ)</option>
+                            <option value="Residential Building (રહેણાંક બિલ્ડીંગ / અપાર્ટમેન્ટ)">Residential Building (રહેણાંક બિલ્ડીંગ / અપાર્ટમેન્ટ)</option>
+                            <option value="Educational / School / College (શૈક્ષણિક સંસ્થા / સ્કૂલ)">Educational / School / College (શૈક્ષણિક સંસ્થા / સ્કૂલ)</option>
+                            <option value="Hospital / Healthcare (હોસ્પિટલ / તબીબી સંસ્થા)">Hospital / Healthcare (હોસ્પિટલ / તબીબી સંસ્થા)</option>
+                            <option value="High-Rise Building (હાઇ-રાઇઝ બિલ્ડીંગ)">High-Rise Building (હાઇ-રાઇઝ બિલ્ડીંગ)</option>
+                            <option value="Shopping Mall / Multiplex (શોપિંગ મોલ / મલ્ટિપ્લેક્સ)">Shopping Mall / Multiplex (શોપિંગ મોલ / મલ્ટિપ્લેક્સ)</option>
+                            <option value="Hotel / Restaurant / Banquet (હોટેલ / રેસ્ટોરન્ટ / બેન્ક્વેટ)">Hotel / Restaurant / Banquet (હોટેલ / રેસ્ટોરન્ટ / બેન્ક્વેટ)</option>
+                            <option value="Warehouse / Godown / Storage (વેરહાઉસ / ગોડાઉન / સ્ટોરેજ)">Warehouse / Godown / Storage (વેરહાઉસ / ગોડાઉન / સ્ટોરેજ)</option>
+                            <option value="Chemical Plant / Refinery (કેમિકલ પ્લાન્ટ / રિફાઇનરી)">Chemical Plant / Refinery (કેમિકल પ્લાન્ટ / રિફાઇનરી)</option>
+                            <option value="Slum Area / Hutments (ઝૂંપડપટ્ટી / કાચા મકાનો)">Slum Area / Hutments (ઝૂંપડપટ્ટી / કાચા મકાનો)</option>
+                            <option value="Religious Place / Temple (ધાર્મિક સ્થળ / મંદિર / મસ્જિદ)">Religious Place / Temple (ધાર્મિક સ્થળ / મંદિર / મસ્જિદ)</option>
+                            <option value="Under Construction Site (અંડર કન્સ્ટ્રક્શન સાઇટ)">Under Construction Site (અંડર કન્સ્ટ્રક્શન સાઇટ)</option>
+                            <option value="Open Land / Grass / Forest Fire (खुલ્લી જ જગ્યા / ઘાસ / જંગલ આગ)">Open Land / Grass / Forest Fire (ખુલ્લી જગ્યા / ઘાસ)</option>
+                            <option value="અન્ય (Other)">અન્ય (Other)</option>
+                        </select>
+                        <input type="text" id="f-sopBuilding-other" placeholder="બિલ્ડીંગ પ્રકાર મેન્યુઅલ લખો..." class="w-full mt-2 px-3.5 py-2 bg-slate-900/90 border border-slate-700 rounded-xl hidden text-white">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-300 mb-1">ફાયર વાહન પસંદ કરો (Vehicles)</label>
+                        <select id="f-vehicle" onchange="handleVehicleChange()" class="w-full px-3.5 py-2 bg-slate-900/90 border border-slate-700 rounded-xl focus:outline-none focus:border-fire-500 text-white">
+                            <option value="વોટર બાઉઝર (GJ 15 G 1217)">વોટર બાઉઝર (GJ 15 G 1217)</option>
+                            <option value="મીની ફાયર (GJ 15 G 0988)">મીની ફાયર (GJ 15 G 0988)</option>
+                            <option value="મીની ફાયર (GJ 15 G 1218)">મીની ફાયਰ (GJ 15 G 1218)</option>
+                            <option value="વોટર બાઉઝર (GJ 18 GB 6226)">વોટર બાઉઝર (GJ 18 GB 6226)</option>
+                            <option value="ત્રણ ટેબલ લેડર (TTL) (GJ 18 GC 0558)">ત્રણ ટેબલ લેડર (TTL) (GJ 18 GC 0558)</option>
+                            <option value="ફોમ ટેન્ડર (GJ 15 GA 0926)">ફોમ ટેન્ડર (GJ 15 GA 0926)</option>
+                            <option value="મીની ફાયર (GJ 15 GA 0768)">મીની ફાયર (GJ 15 GA 0768)</option>
+                            <option value="Rubber Speed Boat (રબર સ્પીડ બોટ)">Rubber Speed Boat (રબર સ્પીડ બોટ)</option>
+                            <option value="અન્ય (Other)">અન્ય (Other)</option>
+                        </select>
+                        <input type="text" id="f-vehicle-other" placeholder="વાહનનું નામ મેન્યુઅલ લખો..." class="w-full mt-2 px-3.5 py-2 bg-slate-900/90 border border-slate-700 rounded-xl hidden text-white">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-300 mb-1">કોલ વિગતો (કંપની નામ, પત્તો, વગેરે) <span class="text-rose-400">*</span></label>
+                    <textarea id="f-details" rows="2" placeholder="GIDC Phase 3, Plot 42, Chemical Unit..." required class="w-full px-3.5 py-2 bg-slate-900/90 border border-slate-700 rounded-xl focus:outline-none focus:border-fire-500 text-white"></textarea>
+                </div>
+
+                <!-- સ્ટાફ ચેકબોક્સ લિસ્ટ -->
+                <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-700/60 space-y-2">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="font-bold text-xs uppercase tracking-wider text-fire-400"><i class="fa-solid fa-users mr-1"></i> કોલમાં ગયેલ સ્ટાફ પસંદ કરો (૧૯ કર્મચારીઓ)</label>
+                        <div class="space-x-2">
+                            <button type="button" onclick="selectAllStaff(true)" class="text-[10px] text-blue-400 hover:underline cursor-pointer">બધા પસંદ કરો</button>
+                            <button type="button" onclick="selectAllStaff(false)" class="text-[10px] text-rose-400 hover:underline cursor-pointer">બધા હટાવો</button>
+                        </div>
+                    </div>
+                    <div id="staff-checkbox-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 max-h-48 overflow-y-auto p-2 bg-slate-950/80 rounded-xl border border-slate-800">
+                        <!-- JS દ્વારા ભરાશે -->
+                    </div>
+                </div>
+
+                <!-- મલ્ટીપલ ફોટા અને વિડિયો અપલોડ -->
+                <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-700/60 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <label class="font-bold text-xs uppercase tracking-wider text-fire-400">
+                            <i class="fa-solid fa-photo-film mr-1"></i> ઘટનાના ફોટા અને વિડિયો અપલોડ કરો (એક કરતાં વધુ)
+                        </label>
+                        <span class="text-[10px] text-slate-400">JPG, PNG, MP4 समर्थित</span>
+                    </div>
+                    <input type="file" id="f-media-files" accept="image/*,video/*" multiple onchange="handleMultipleMediaUpload(event)" class="w-full text-xs text-slate-300 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-fire-600 file:text-white hover:file:bg-fire-700 cursor-pointer">
+                    <div id="media-preview-container" class="flex flex-wrap gap-2 mt-2">
+                        <!-- ડાયનેમિક મીડિયા પ્રીવ્યુ -->
+                    </div>
+                </div>
+
+                <!-- રેસ્ક્યુ અને જાનહાની મેટ્રિક્સ -->
+                <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-700/60 space-y-3">
+                    <h4 class="font-bold text-xs uppercase tracking-wider text-fire-400"><i class="fa-solid fa-shield-heart mr-1"></i> રેસ્ક્યુ અને જાનહાની આંકડાકીય માહિતી (માનવ / પ્રાણી / પક્ષી)</h4>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-300 mb-1">બચાવેલ (માનવ)</label>
+                            <input type="number" id="f-rescuedMen" value="0" class="w-full px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-white">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-300 mb-1">બચાવેલ (પ્રાણી)</label>
+                            <input type="number" id="f-rescuedAnimal" value="0" class="w-full px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-white">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-300 mb-1">બચાવેલ (પક્ષી)</label>
+                            <input type="number" id="f-rescuedBird" value="0" class="w-full px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-white">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-300 mb-1">મૃત્યુ (માનવ)</label>
+                            <input type="number" id="f-deathsMen" value="0" class="w-full px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-white">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-300 mb-1">મૃત્યુ (પ્રાણી)</label>
+                            <input type="number" id="f-deathsAnimal" value="0" class="w-full px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-white">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-300 mb-1">મૃત્યુ (પક્ષી)</label>
+                            <input type="number" id="f-deathsBird" value="0" class="w-full px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-white">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-5 py-3.5 border-t border-slate-700/50 bg-slate-950/80 flex justify-end space-x-3">
+                <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl border border-slate-700 text-slate-300 hover:bg-slate-800 text-xs font-semibold cursor-pointer">રદ કરો</button>
+                <button type="button" onclick="saveCallRecord()" class="px-5 py-2 rounded-xl bg-fire-600 hover:bg-fire-700 text-white text-xs font-bold shadow-lg shadow-fire-600/40 cursor-pointer">રેકોર્ડ સેવ કરો (Google Sheet માં મોકલો)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- કસ્ટમ એલર્ટ / મેસેજ બોક્સ મોડલ -->
+    <div id="custom-alert-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-panel rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col p-6 text-center space-y-4 border border-fire-500/40">
+            <div class="w-12 h-12 bg-fire-950 text-fire-400 rounded-full flex items-center justify-center mx-auto text-xl border border-fire-700">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div>
+                <h4 class="font-bold text-base text-white mb-1">માહિતી / સૂચના</h4>
+                <p id="custom-alert-message" class="text-xs text-slate-300">સંદેશો અહીં દેખાશે...</p>
+            </div>
+            <button type="button" onclick="closeCustomAlert()" class="w-full py-2.5 bg-fire-600 hover:bg-fire-700 text-white rounded-xl font-bold text-xs transition cursor-pointer shadow">બરાબર (OK)</button>
+        </div>
+    </div>
+
+    <!-- કસ્ટમ કન્ફર્મ બોક્સ મોડલ -->
+    <div id="custom-confirm-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-panel rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col p-6 text-center space-y-4 border border-amber-500/40">
+            <div class="w-12 h-12 bg-amber-950 text-amber-400 rounded-full flex items-center justify-center mx-auto text-xl border border-amber-700">
+                <i class="fa-solid fa-circle-question"></i>
+            </div>
+            <div>
+                <h4 class="font-bold text-base text-white mb-1">ખાતરી કરો</h4>
+                <p id="custom-confirm-message" class="text-xs text-slate-300">શું તમે આ કરવા માંગો છો?</p>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <button type="button" onclick="resolveConfirm(false)" class="py-2.5 border border-slate-700 text-slate-300 rounded-xl font-bold text-xs transition cursor-pointer">ના (No)</button>
+                <button type="button" onclick="resolveConfirm(true)" class="py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-xs transition cursor-pointer shadow">હા (Yes)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- નોટિફિકેશન ટોસ્ટ -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl border border-slate-700 flex items-center gap-3 text-xs">
+        <i class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
+        <span id="toast-msg">ક્રિયા સફળતાપૂર્વક પૂર્ણ થઈ.</span>
+    </div>
+
+    <!-- જાવાસ્ક્રિપ્ટ લોજિક -->
+    <script>
+        const staffList = [
+            "ભરતસિંહ એમ. જાડેજા (ફાયર ઓફિસર)",
+            "શૈલેષ બી. પટેલ (ડ્રાઇવર)",
+            "પરેશ ઈ. પટેલ (ડ્રાઇવર)",
+            "રમેશ એન. પટેલ (ડ્રાઇવਰ)",
+            "રાજેશ આર. માંગેલા (ફાયરમેન)",
+            "વિકાસ આર. માંગેલા (ફાયરમેન)",
+            "સાગર કે. માંગેલા (ફાયરમેન)",
+            "અરૂણ જે. માંગેલા (ફાયરમેન)",
+            "વિષ્ણુ બી. મકવાણા (ફાયરમેન)",
+            "ભુપેન્દ્ર એ. ગામીત (ફાયરમેન)",
+            "ગૌરવ વી. ચોધરી (ફાયરમેન)",
+            "અજય એમ. પટેલ (ફાયરમેન)",
+            "તેજશ કે. પટેલ (ડ્રાઇવર)",
+            "અભિષેક આર. પટેલ (ફાયરમેન)",
+            "સકા એમ. ભોયા (ફાયરમેન)",
+            "આઝમ એમ. ભોયા (ફાયરમેન)",
+            "અજય ડી. પટેલ (ફાયરમેન)",
+            "તરૂણ ડી. ગાવિત (ફાયરમેન)",
+            "હિરેન એન. પટેલ (ડ્રાઈવર)"
+        ];
+
+        const subCallTypeMap = {
+            'Fire Call': ['Major Call (મોટી આગ)', 'Minor Call (નાની આગ)', 'Chemical Fire (કેમિકલ આગ)', 'Electrical Fire (શોર્ટ સર્કિટ)', 'Godown Fire (ગોડાઉન આગ)'],
+            'Rescue Call': ['Animal Rescue (પ્રાણી બચાવ)', 'Tree Cutting / Fallen Call (ટ્રી કટીંગ / વૃક્ષ ધરાશાયી)', 'Lift Rescue (લિફ્ટ ફસાયેલ)', 'Well Rescue (કુવા બચાવ)', 'Accident Rescue (અકસ્માત રેસ્ક્યુ)', 'Water Rescue (બોટ રેસ્ક્યુ)'],
+            'Mock drill': ['Mock drill (મોકડ્રીલ)', 'Training (ટ્રેનિંગ)'],
+            'Bandobast': ['VVIP Duty (વી.વી.આઈ.પી. ડ્યુટી)', 'General Bandobast (સામાન્ય બંદોબસ્ત)']
+        };
+
+        const DEFAULT_CALLS = [
+            {
+                id: 1,
+                Mahanagarpalika: 'VAPI MAHANAGARPALIKA',
+                date: '2026-07-31',
+                inTime: '11:30',
+                outTime: '13:00',
+                callType: 'Fire Call',
+                subType: 'Major Call (મોટી આગ)',
+                sopBuilding: 'Factory / Industrial (ફેક્ટરી / ઔદ્યોગિક)',
+                vehicle: 'વોટર બાઉઝર (GJ 15 G 1217)',
+                callerName: 'રાજેશભાઈ પટેલ',
+                callerMobile: '9876543210',
+                details: 'GIDC Phase 3, Plot 42, Chemical Unit Fire',
+                staff: ['ભરતસિંહ એમ. જાડેજા (ફાયર ઓફિસર)', 'શૈલેષ બી. પટેલ (ડ્રાઇવર)', 'રાજેશ આર. માંગેલા (ફાયરમેન)'],
+                mediaList: [{ type: 'image', data: 'https://lh3.googleusercontent.com/d/174PWn8OLHJrtVKz_it5cL0REl57-zMqj' }],
+                rescuedMen: 2, rescuedAnimal: 0, rescuedBird: 0,
+                deathsMen: 0, deathsAnimal: 0, deathsBird: 0
+            }
+        ];
+
+        let callDb = JSON.parse(localStorage.getItem('vapi_fire_gsheet_db_v12')) || DEFAULT_CALLS;
+        let offlineQueue = JSON.parse(localStorage.getItem('vapi_offline_queue_v12')) || [];
+        let gsheetWebhookUrl = localStorage.getItem('vapi_gsheet_url') || 'https://script.google.com/macros/s/AKfycbxMlDBz1Ary8309iAmb0dMDvMObcVAzPPbyVKrB_cdxwGMlhHzBIAo_pkbCV9cjEfBKew/exec';
+        let uploadedMediaArray = [];
+        let typeChartInstance = null;
+        let vehicleChartInstance = null;
+        let confirmCallback = null;
+
+        function showCustomAlert(msg) {
+            document.getElementById('custom-alert-message').innerText = msg;
+            document.getElementById('custom-alert-modal').classList.remove('hidden');
+        }
+
+        function closeCustomAlert() {
+            document.getElementById('custom-alert-modal').classList.add('hidden');
+        }
+
+        function showCustomConfirm(msg, callback) {
+            document.getElementById('custom-confirm-message').innerText = msg;
+            confirmCallback = callback;
+            document.getElementById('custom-confirm-modal').classList.remove('hidden');
+        }
+
+        function resolveConfirm(result) {
+            document.getElementById('custom-confirm-modal').classList.add('hidden');
+            if (confirmCallback) {
+                confirmCallback(result);
+                confirmCallback = null;
+            }
+        }
+
+        function saveDB() {
+            localStorage.setItem('vapi_fire_gsheet_db_v12', JSON.stringify(callDb));
+            localStorage.setItem('vapi_offline_queue_v12', JSON.stringify(offlineQueue));
+        }
+
+        // નેટવર્ક કનેક્ટિવિટી મોનિટરિંગ અને ઓટો-સિંક
+        window.addEventListener('online', () => {
+            updateNetworkStatus(true);
+            processOfflineQueue();
+        });
+        window.addEventListener('offline', () => {
+            updateNetworkStatus(false);
+        });
+
+        function updateNetworkStatus(isOnline) {
+            const el = document.getElementById('net-status');
+            if (el) {
+                if (isOnline) {
+                    el.className = "px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-600 text-white";
+                    el.innerHTML = '<i class="fa-solid fa-wifi"></i> ઓનલાઇન';
+                } else {
+                    el.className = "px-2 py-0.5 rounded text-[10px] font-bold bg-rose-600 text-white";
+                    el.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> ઓફલાઇન (લોકલ સેવ)';
+                }
+            }
+        }
+
+        setInterval(() => {
+            const now = new Date();
+            const clockEl = document.getElementById('live-clock');
+            if(clockEl) {
+                clockEl.innerText = now.toLocaleDateString('gu-IN', { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' + now.toLocaleTimeString();
+            }
+            if(navigator.onLine) {
+                updateNetworkStatus(true);
+                if(offlineQueue.length > 0) {
+                    processOfflineQueue();
+                }
+            } else {
+                updateNetworkStatus(false);
+            }
+        }, 3000);
+
+        function toggleTheme() {
+            document.documentElement.classList.toggle('light');
+            const isLight = document.documentElement.classList.contains('light');
+            const iconEl = document.getElementById('theme-icon');
+            if(iconEl) {
+                iconEl.className = isLight ? 'fa-solid fa-moon text-slate-800' : 'fa-solid fa-sun text-amber-400';
+            }
+            updateCharts();
+        }
+
+        function openConfigModal() {
+            const urlInput = document.getElementById('gsheet-url');
+            if(urlInput) urlInput.value = gsheetWebhookUrl;
+            document.getElementById('config-modal').classList.remove('hidden');
+        }
+
+        function closeConfigModal() {
+            document.getElementById('config-modal').classList.add('hidden');
+        }
+
+        function saveConfig() {
+            const urlInput = document.getElementById('gsheet-url');
+            if(urlInput) {
+                gsheetWebhookUrl = urlInput.value.trim();
+                localStorage.setItem('vapi_gsheet_url', gsheetWebhookUrl);
+            }
+            closeConfigModal();
+            showToast('ગુગલ શીટ URL સફળતાપૂર્વક સેવ થઈ ગઈ.');
+        }
+
+        function populateStaffCheckboxes(selectedStaff = []) {
+            const container = document.getElementById('staff-checkbox-container');
+            if(!container) return;
+            container.innerHTML = staffList.map((staffName) => {
+                const isChecked = selectedStaff.includes(staffName) ? 'checked' : '';
+                return `
+                    <label class="flex items-center space-x-2 p-1.5 hover:bg-slate-800/60 rounded-lg cursor-pointer text-xs">
+                        <input type="checkbox" name="call-staff" value="${staffName}" ${isChecked} class="rounded text-fire-600 focus:ring-fire-500 w-4 h-4 cursor-pointer">
+                        <span class="text-slate-300">${staffName}</span>
+                    </label>
+                `;
+            }).join('');
+        }
+
+        function selectAllStaff(select) {
+            const checkboxes = document.querySelectorAll('input[name="call-staff"]');
+            checkboxes.forEach(cb => cb.checked = select);
+        }
+
+        function handleCallTypeChange() {
+            const val = document.getElementById('f-callType').value;
+            const otherInput = document.getElementById('f-callType-other');
+            const subSelect = document.getElementById('f-subType');
+            
+            if (val === 'અન્ય (Other)') {
+                otherInput.classList.remove('hidden');
+                subSelect.innerHTML = '<option value="અન્ય (Other)">અન્ય (Other)</option>';
+                document.getElementById('f-subType-other').classList.remove('hidden');
+            } else {
+                otherInput.classList.add('hidden');
+                document.getElementById('f-subType-other').classList.add('hidden');
+                const subs = subCallTypeMap[val] || ['General Call'];
+                subSelect.innerHTML = subs.map(s => `<option value="${s}">${s}</option>`).join('') + '<option value="અન્ય (Other)">અન્ય (Other)</option>';
+            }
+        }
+
+        function handleSubCallTypeChange() {
+            const val = document.getElementById('f-subType').value;
+            const otherInput = document.getElementById('f-subType-other');
+            if (val === 'અન્ય (Other)') {
+                otherInput.classList.remove('hidden');
+            } else {
+                otherInput.classList.add('hidden');
+            }
+        }
+
+        function handleSopBuildingChange() {
+            const val = document.getElementById('f-sopBuilding').value;
+            const otherInput = document.getElementById('f-sopBuilding-other');
+            if (val === 'અન્ય (Other)') {
+                otherInput.classList.remove('hidden');
+            } else {
+                otherInput.classList.add('hidden');
+            }
+        }
+
+        function handleVehicleChange() {
+            const val = document.getElementById('f-vehicle').value;
+            const otherInput = document.getElementById('f-vehicle-other');
+            if (val === 'અન્ય (Other)') {
+                otherInput.classList.remove('hidden');
+            } else {
+                otherInput.classList.add('hidden');
+            }
+        }
+
+        function handleMultipleMediaUpload(event) {
+            const files = event.target.files;
+            if (!files) return;
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const base64Data = e.target.result;
+                    const isVideo = file.type.includes('video');
+                    uploadedMediaArray.push({ type: isVideo ? 'video' : 'image', data: base64Data });
+                    renderMediaPreviews();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function renderMediaPreviews() {
+            const container = document.getElementById('media-preview-container');
+            if (!container) return;
+            
+            if (uploadedMediaArray.length === 0) {
+                container.innerHTML = `<span class="text-xs text-slate-400">કોઈ મીડિયા ફાઈલ પસંદ કરેલ નથી.</span>`;
+                return;
+            }
+
+            container.innerHTML = uploadedMediaArray.map((item, idx) => {
+                if (item.type === 'video') {
+                    return `
+                        <div class="relative w-16 h-16 bg-black rounded-lg border border-slate-700 overflow-hidden flex items-center justify-center">
+                            <i class="fa-solid fa-video text-amber-400 text-lg"></i>
+                            <button type="button" onclick="removeMediaItem(${idx})" class="absolute top-0 right-0 bg-rose-600 text-white w-4 h-4 rounded-bl flex items-center justify-center text-[10px] cursor-pointer">&times;</button>
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div class="relative w-16 h-16 rounded-lg border border-slate-700 overflow-hidden">
+                            <img src="${item.data}" class="w-full h-full object-cover">
+                            <button type="button" onclick="removeMediaItem(${idx})" class="absolute top-0 right-0 bg-rose-600 text-white w-4 h-4 rounded-bl flex items-center justify-center text-[10px] cursor-pointer">&times;</button>
+                        </div>
+                    `;
+                }
+            }).join('');
+        }
+
+        function removeMediaItem(idx) {
+            uploadedMediaArray.splice(idx, 1);
+            renderMediaPreviews();
+        }
+
+        function renderDashboard() {
+            renderStats();
+            renderTable();
+            updateCharts();
+        }
+
+        function renderStats() {
+            const total = callDb.length;
+            const rescued = callDb.reduce((acc, curr) => acc + Number(curr.rescuedMen || 0) + Number(curr.rescuedAnimal || 0) + Number(curr.rescuedBird || 0), 0);
+            const deaths = callDb.reduce((acc, curr) => acc + Number(curr.deathsMen || 0) + Number(curr.deathsAnimal || 0) + Number(curr.deathsBird || 0), 0);
+
+            document.getElementById('stat-total').innerText = total;
+            document.getElementById('stat-rescued').innerText = rescued;
+            document.getElementById('stat-deaths').innerText = deaths;
+        }
+
+        function renderTable() {
+            const searchInput = document.getElementById('search-input');
+            const query = searchInput ? searchInput.value.toLowerCase() : '';
+            const filtered = callDb.filter(item => {
+                return Object.values(item).some(val => String(val).toLowerCase().includes(query));
+            });
+
+            const tbody = document.getElementById('call-table-body');
+            if(!tbody) return;
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-slate-400">કોઈ કોલ રેકોર્ડ મળ્યો નથી. 'નવો કોલ ઉમેરો' બટન દબાવો.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map((item, idx) => {
+                const staffStr = Array.isArray(item.staff) ? item.staff.join(', ') : (item.staff || '');
+                let mediaHtml = `<div class="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center text-slate-400 text-xs"><i class="fa-solid fa-image"></i></div>`;
+                
+                if (item.mediaList && item.mediaList.length > 0) {
+                    const first = item.mediaList[0];
+                    if (first.type === 'video') {
+                        mediaHtml = `<div class="w-10 h-10 bg-black rounded-lg border border-slate-700 flex items-center justify-center text-amber-400 text-sm"><i class="fa-solid fa-video"></i></div>`;
+                    } else {
+                        mediaHtml = `<img src="${first.data}" class="w-10 h-10 object-cover rounded-lg shadow border border-slate-700">`;
+                    }
+                }
+
+                return `
+                    <tr class="hover:bg-slate-800/40 transition border-b border-slate-800/50">
+                        <td class="p-3 sm:p-4 font-semibold text-slate-400">${idx + 1}</td>
+                        <td class="p-3 sm:p-4">${mediaHtml}</td>
+                        <td class="p-3 sm:p-4 whitespace-nowrap">
+                            <span class="font-medium text-white">${item.date || ''}</span><br>
+                            <span class="text-[11px] text-amber-400 font-semibold"><i class="fa-regular fa-clock mr-1"></i>Out: ${item.outTime || 'N/A'} | In: ${item.inTime || 'N/A'}</span>
+                        </td>
+                        <td class="p-3 sm:p-4">
+                            <span class="bg-fire-950/80 text-fire-400 px-2.5 py-1 rounded-lg text-xs font-bold border border-fire-800/50">${item.callType || ''}</span><br>
+                            <span class="text-[11px] text-slate-400 font-medium">${item.subType || ''}</span>
+                        </td>
+                        <td class="p-3 sm:p-4 whitespace-nowrap">
+                            <span class="font-bold text-white"><i class="fa-solid fa-user text-amber-400 mr-1"></i>${item.callerName || 'અજ્ઞાત'}</span><br>
+                            <span class="text-[11px] text-slate-300"><i class="fa-solid fa-phone text-blue-400 mr-1"></i>${item.callerMobile || 'N/A'}</span>
+                        </td>
+                        <td class="p-3 sm:p-4 max-w-xs">
+                            <span class="font-semibold text-white">${item.sopBuilding || ''}</span><br>
+                            <span class="text-[11px] text-slate-400 truncate block">${item.details || ''}</span>
+                        </td>
+                        <td class="p-3 sm:p-4 max-w-xs">
+                            <span class="font-medium text-blue-400">${item.vehicle || ''}</span><br>
+                            <span class="text-[10px] text-slate-400 block truncate" title="${staffStr}"><b>સ્ટાફ:</b> ${staffStr}</span>
+                        </td>
+                        <td class="p-3 sm:p-4 whitespace-nowrap text-xs">
+                            <span class="text-emerald-400 font-medium">મા: ${item.rescuedMen || 0} | પ્ર: ${item.rescuedAnimal || 0} | પ: ${item.rescuedBird || 0}</span>
+                        </td>
+                        <td class="p-3 sm:p-4 whitespace-nowrap text-xs">
+                            <span class="text-rose-400 font-medium">મા: ${item.deathsMen || 0} | પ્ર: ${item.deathsAnimal || 0} | પ: ${item.deathsBird || 0}</span>
+                        </td>
+                        <td class="p-3 sm:p-4 text-right whitespace-nowrap">
+                            <button type="button" onclick="openEditModal(${item.id})" class="p-2 bg-slate-800 hover:bg-fire-950 hover:text-fire-400 rounded-xl transition text-slate-300 cursor-pointer" title="એડિટ કરો">
+                                <i class="fa-solid fa-pen-to-square text-xs"></i>
+                            </button>
+                            <button type="button" onclick="deleteCall(${item.id})" class="p-2 bg-slate-800 hover:bg-rose-950 hover:text-rose-400 rounded-xl transition text-slate-300 ml-1 cursor-pointer" title="ડિલીટ કરો">
+                                <i class="fa-solid fa-trash text-xs"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updateCharts() {
+            const textColor = '#cbd5e1';
+
+            const typeCounts = {};
+            callDb.forEach(c => {
+                const t = c.callType || 'Other';
+                typeCounts[t] = (typeCounts[t] || 0) + 1;
+            });
+
+            const vehicleCounts = {};
+            callDb.forEach(c => {
+                const v = c.vehicle || 'Unassigned';
+                vehicleCounts[v] = (vehicleCounts[v] || 0) + 1;
+            });
+
+            if(typeChartInstance) typeChartInstance.destroy();
+            if(vehicleChartInstance) vehicleChartInstance.destroy();
+
+            const ctxPie = document.getElementById('callTypeChart');
+            if(ctxPie) {
+                typeChartInstance = new Chart(ctxPie.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(typeCounts),
+                        datasets: [{
+                            data: Object.values(typeCounts),
+                            backgroundColor: ['#f43f5e', '#3b82f6', '#f59e0b', '#10b981', '#8b5cf6'],
+                            borderWidth: 2,
+                            borderColor: '#0f172a'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { color: textColor, font: { family: 'Inter', size: 11 } } }
+                        }
+                    }
+                });
+            }
+
+            const ctxBar = document.getElementById('vehicleChart');
+            if(ctxBar) {
+                vehicleChartInstance = new Chart(ctxBar.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(vehicleCounts),
+                        datasets: [{
+                            label: 'વાહનનો ઉપયોગ',
+                            data: Object.values(vehicleCounts),
+                            backgroundColor: '#f43f5e',
+                            borderRadius: 8
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: { ticks: { color: textColor, font: { size: 10 } }, grid: { display: false } },
+                            y: { ticks: { color: textColor, precision: 0 }, grid: { color: '#1e293b' } }
+                        },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+        }
+
+        function openAddModal() {
+            uploadedMediaArray = [];
+            renderMediaPreviews();
+            populateStaffCheckboxes([]);
+            document.getElementById('modal-title').innerText = "નવો ફાયર કોલ રેકોર્ડ ઉમેરો";
+            document.getElementById('edit-id').value = '';
+            document.getElementById('f-nagarpalika').value = 'VAPI';
+            document.getElementById('f-date').value = new Date().toISOString().slice(0, 10);
+            document.getElementById('f-callerName').value = '';
+            document.getElementById('f-callerMobile').value = '';
+            document.getElementById('f-inTime').value = '11:00';
+            document.getElementById('f-outTime').value = '12:30';
+            
+            document.getElementById('f-callType').value = 'Fire Call';
+            handleCallTypeChange();
+            
+            document.getElementById('f-sopBuilding').value = 'Factory / Industrial (ફેક્ટરી / ઔદ્યોગિક)';
+            document.getElementById('f-sopBuilding-other').classList.add('hidden');
+            
+            document.getElementById('f-vehicle').value = 'વોટર બાઉઝર (GJ 15 G 1217)';
+            document.getElementById('f-vehicle-other').classList.add('hidden');
+
+            document.getElementById('f-details').value = '';
+            document.getElementById('f-media-files').value = '';
+            document.getElementById('f-rescuedMen').value = '0';
+            document.getElementById('f-rescuedAnimal').value = '0';
+            document.getElementById('f-rescuedBird').value = '0';
+            document.getElementById('f-deathsMen').value = '0';
+            document.getElementById('f-deathsAnimal').value = '0';
+            document.getElementById('f-deathsBird').value = '0';
+            document.getElementById('modal-backdrop').classList.remove('hidden');
+        }
+
+        function openEditModal(id) {
+            const item = callDb.find(c => c.id === id);
+            if (!item) return;
+            
+            uploadedMediaArray = item.mediaList ? [...item.mediaList] : [];
+            renderMediaPreviews();
+
+            const staffSelected = Array.isArray(item.staff) ? item.staff : (item.staff ? [item.staff] : []);
+            populateStaffCheckboxes(staffSelected);
+
+            document.getElementById('modal-title').innerText = "કોલ રેકોર્ડ એડિટ કરો";
+            document.getElementById('edit-id').value = item.id;
+            document.getElementById('f-nagarpalika').value = item.nagarpalika || 'VAPI';
+            document.getElementById('f-date').value = item.date || '';
+            document.getElementById('f-callerName').value = item.callerName || '';
+            document.getElementById('f-callerMobile').value = item.callerMobile || '';
+            document.getElementById('f-inTime').value = item.inTime || '';
+            document.getElementById('f-outTime').value = item.outTime || '';
+            
+            const callTypeSel = document.getElementById('f-callType');
+            let matchedCallType = Array.from(callTypeSel.options).some(o => o.value === item.callType);
+            if (matchedCallType) {
+                callTypeSel.value = item.callType;
+                handleCallTypeChange();
+            } else {
+                callTypeSel.value = 'અન્ય (Other)';
+                handleCallTypeChange();
+                document.getElementById('f-callType-other').value = item.callType;
+                document.getElementById('f-callType-other').classList.remove('hidden');
+            }
+
+            const subTypeSel = document.getElementById('f-subType');
+            let matchedSubType = Array.from(subTypeSel.options).some(o => o.value === item.subType);
+            if (matchedSubType) {
+                subTypeSel.value = item.subType;
+            } else {
+                subTypeSel.value = 'અન્ય (Other)';
+                handleSubCallTypeChange();
+                document.getElementById('f-subType-other').value = item.subType;
+            }
+
+            const sopSel = document.getElementById('f-sopBuilding');
+            let matchedSop = Array.from(sopSel.options).some(o => o.value === item.sopBuilding);
+            if (matchedSop) {
+                sopSel.value = item.sopBuilding;
+            } else {
+                sopSel.value = 'અન્ય (Other)';
+                handleSopBuildingChange();
+                document.getElementById('f-sopBuilding-other').value = item.sopBuilding;
+            }
+
+            const vehSel = document.getElementById('f-vehicle');
+            let matchedVeh = Array.from(vehSel.options).some(o => o.value === item.vehicle);
+            if (matchedVeh) {
+                vehSel.value = item.vehicle;
+            } else {
+                vehSel.value = 'અન્ય (Other)';
+                handleVehicleChange();
+                document.getElementById('f-vehicle-other').value = item.vehicle;
+            }
+
+            document.getElementById('f-details').value = item.details || '';
+            document.getElementById('f-rescuedMen').value = item.rescuedMen || 0;
+            document.getElementById('f-rescuedAnimal').value = item.rescuedAnimal || 0;
+            document.getElementById('f-rescuedBird').value = item.rescuedBird || 0;
+            document.getElementById('f-deathsMen').value = item.deathsMen || 0;
+            document.getElementById('f-deathsAnimal').value = item.deathsAnimal || 0;
+            document.getElementById('f-deathsBird').value = item.deathsBird || 0;
+            document.getElementById('modal-backdrop').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-backdrop').classList.add('hidden');
+        }
+
+        function saveCallRecord() {
+            const callerName = document.getElementById('f-callerName').value.trim();
+            const callerMobile = document.getElementById('f-callerMobile').value.trim();
+            const details = document.getElementById('f-details').value.trim();
+            const inTime = document.getElementById('f-inTime').value;
+            const outTime = document.getElementById('f-outTime').value;
+
+            if (!callerName) {
+                showCustomAlert('કૃપા કરીને કોલનારનું નામ (Caller Name) ફરજિયાત દાખલ કરો.');
+                document.getElementById('f-callerName').focus();
+                return;
+            }
+            if (!callerMobile || callerMobile.length < 10) {
+                showCustomAlert('કૃપા કરીને કોલનારનો સાચો ૧૦ અંકનો મોબાઈલ નંબર (Caller Mobile) દાખલ કરો.');
+                document.getElementById('f-callerMobile').focus();
+                return;
+            }
+            if (!details) {
+                showCustomAlert('કૃપા કરીને કોલ વિગતો (Call Details) ફરજિયાત દાખલ કરો.');
+                document.getElementById('f-details').focus();
+                return;
+            }
+            if (!inTime || !outTime) {
+                showCustomAlert('કૃપા કરીને ઇન ટાઈમ અને આઉટ ટાઈમ બંને પસંદ કરો.');
+                return;
+            }
+
+            const editId = document.getElementById('edit-id').value;
+            
+            let callTypeVal = document.getElementById('f-callType').value;
+            if (callTypeVal === 'અન્ય (Other)') {
+                callTypeVal = document.getElementById('f-callType-other').value.trim() || 'અન્ય';
+            }
+
+            let subTypeVal = document.getElementById('f-subType').value;
+            if (subTypeVal === 'અન્ય (Other)') {
+                subTypeVal = document.getElementById('f-subType-other').value.trim() || 'અન્ય';
+            }
+
+            let sopVal = document.getElementById('f-sopBuilding').value;
+            if (sopVal === 'અન્ય (Other)') {
+                sopVal = document.getElementById('f-sopBuilding-other').value.trim() || 'અન્ય';
+            }
+
+            let vehVal = document.getElementById('f-vehicle').value;
+            if (vehVal === 'અન્ય (Other)') {
+                vehVal = document.getElementById('f-vehicle-other').value.trim() || 'અન્ય';
+            }
+
+            const checkedStaff = Array.from(document.querySelectorAll('input[name="call-staff"]:checked')).map(cb => cb.value);
+
+            const record = {
+                id: editId ? Number(editId) : (callDb.length > 0 ? Math.max(...callDb.map(c => c.id)) + 1 : 1),
+                nagarpalika: document.getElementById('f-nagarpalika').value,
+                date: document.getElementById('f-date').value,
+                inTime: inTime,
+                outTime: outTime,
+                callType: callTypeVal,
+                subType: subTypeVal,
+                sopBuilding: sopVal,
+                vehicle: vehVal,
+                callerName: callerName,
+                callerMobile: callerMobile,
+                details: details,
+                staff: checkedStaff,
+                mediaList: uploadedMediaArray,
+                rescuedMen: Number(document.getElementById('f-rescuedMen').value) || 0,
+                rescuedAnimal: Number(document.getElementById('f-rescuedAnimal').value) || 0,
+                rescuedBird: Number(document.getElementById('f-rescuedBird').value) || 0,
+                deathsMen: Number(document.getElementById('f-deathsMen').value) || 0,
+                deathsAnimal: Number(document.getElementById('f-deathsAnimal').value) || 0,
+                deathsBird: Number(document.getElementById('f-deathsBird').value) || 0
+            };
+
+            if (editId) {
+                const idx = callDb.findIndex(c => c.id === Number(editId));
+                if (idx !== -1) callDb[idx] = record;
+                showToast('કોલ રેકોર્ડ સફળતાપૂર્વક અપડેટ થયો.');
+            } else {
+                callDb.push(record);
+                showToast('નવો કોલ રેકોર્ડ સફળતાપૂર્વક ઉમેરાયો.');
+            }
+
+            saveDB();
+            closeModal();
+            renderDashboard();
+
+            // ગુગલ શીટમાં મોકલવાનો પ્રયાસ (જો ઇન્ટરનેટ ન હોય તો ક્યૂ માં ઉમેરાશે)
+            sendRecordToGoogleSheet(record);
+        }
+
+        function deleteCall(id) {
+            showCustomConfirm('શું તમે ખરેખર આ કોલ રેકોર્ડ ડિલીટ કરવા માંગો છો?', (confirmed) => {
+                if (confirmed) {
+                    callDb = callDb.filter(c => c.id !== id);
+                    saveDB();
+                    renderDashboard();
+                    showToast('કોલ રેકોર્ડ ડિલીટ કરવામાં આવ્યો.');
+                }
+            });
+        }
+
+        function sendRecordToGoogleSheet(record) {
+            if (!navigator.onLine) {
+                // ઇન્ટરનેટ ન હોય તો ઓફલાઇન ક્યૂ માં સેવ કરો
+                if(!offlineQueue.some(item => item.id === record.id)) {
+                    offlineQueue.push(record);
+                    saveDB();
+                }
+                showToast('ઇન્ટરનેટ નથી: રેકોર્ડ લોકલ સેવ થયો. નેટ આવતા આપોઆપ સિન્ક થશે.');
+                return;
+            }
+
+            fetch(gsheetWebhookUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(record)
+            }).then(() => {
+                showToast('ડેટા સફળતાપૂર્વક ગુગલ શીટમાં મોકલવામાં આવ્યો.');
+            }).catch(err => {
+                console.error('Sheet Sync Error:', err);
+                if(!offlineQueue.some(item => item.id === record.id)) {
+                    offlineQueue.push(record);
+                    saveDB();
+                }
+                showToast('સિન્ક ફેઇલ: રેકોર્ડ લોકલ ક્યૂ માં સુરક્ષિત છે.');
+            });
+        }
+
+        function processOfflineQueue() {
+            if (offlineQueue.length === 0 || !navigator.onLine) return;
+            
+            showToast('ઓફલાઇન રેકોર્ડ્સ ગુગલ શીટ સાથે સિન્ક થઈ રહ્યા છે...');
+            const queueCopy = [...offlineQueue];
+            offlineQueue = [];
+            saveDB();
+
+            queueCopy.forEach(record => {
+                fetch(gsheetWebhookUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(record)
+                }).catch(() => {
+                    // જો ફરી નિષ્ફળ જાય તો પાછા ક્યૂ માં નાખો
+                    if(!offlineQueue.some(item => item.id === record.id)) {
+                        offlineQueue.push(record);
+                        saveDB();
+                    }
+                });
+            });
+        }
+
+        function syncToGoogleSheet() {
+            if (!gsheetWebhookUrl) {
+                showCustomAlert('કૃપા કરીને પહેલાં "ગુગલ શીટ સેટઅપ" બટન દબાવીને તમારું Web App URL દાખલ કરો.');
+                openConfigModal();
+                return;
+            }
+            if(!navigator.onLine) {
+                showCustomAlert('હાલમાં ઇન્ટરનેટ કનેક્શન ઉપલબ્ધ નથી. ઇન્ટરનેટ આવતા જ ડેટા આપોઆપ સિન્ક થઈ જશે.');
+                return;
+            }
+            showToast('ગુગલ શીટમાં તમામ રેકોર્ડ મોકલવામાં આવી રહ્યા છે...');
+            callDb.forEach(record => {
+                sendRecordToGoogleSheet(record);
+            });
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            if(!toast) return;
+            document.getElementById('toast-msg').innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3500);
+        }
+
+        window.onload = function() {
+            renderDashboard();
+            updateNetworkStatus(navigator.onLine);
+            if(navigator.onLine && offlineQueue.length > 0) {
+                processOfflineQueue();
+            }
+        };
+    </script>
+</body>
+</html>
+<script></script></body></html>
